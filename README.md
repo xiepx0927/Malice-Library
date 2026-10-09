@@ -7,31 +7,33 @@
 - **存到本地图书馆**：一键将整包图片打包压缩存入 `archives/` 并标记作者
 - **本地压缩包管理**：zip / 7z / rar 图集网格浏览、灯箱大图、小说直读、视频播放，支持作者标记与等级（1-5★）
 
-## 快速开始
+## 📥 下载与安装（Windows，首选支持平台）
 
-```bash
-# Linux / macOS
-python3 app.py
+在 GitHub Releases 下载 **完整包** `Malice-Library-{版本}.zip`：
 
-# Windows：一键启动（创建虚拟环境并安装依赖）
-启动.bat
-```
+1. 解压到任意文件夹（建议本地磁盘，避免 OneDrive/云同步盘）。
+2. 双击 **`启动.bat`**。
+   - 首次运行自动：创建虚拟环境 → 安装依赖 → 下载 Playwright Chromium（约 150MB，仅图集自动验证需要）。
+   - 完成后自动弹开浏览器进入 `http://127.0.0.1:5000`。
+3. 以后每次双击 `启动.bat` 即启动。停止服务：关闭黑色命令行窗口。
 
-启动后浏览器访问 **http://127.0.0.1:5000**
+> 系统要求：Windows 10/11（64 位）+ Python 3.10+（安装时勾选 "Add python.exe to PATH"）。
 
-### 依赖
+### 手动安装（可选）
 
 ```bash
 pip install flask requests beautifulsoup4 lxml py7zr Pillow
-pip install playwright && python3 -m playwright install chromium   # 图集自动过 Cloudflare 验证需要
+pip install playwright && python3 -m playwright install chromium
+python app.py
 ```
 
-> rar 支持需要系统安装 `unrar` 或 `bsdtar`（zip / 7z 无需额外依赖）。
+> rar 支持需要额外安装 `unrar`（zip / 7z 无需额外依赖）。
 
 ## 版本与更新
 
-- 版本号显示在页面左上角 Logo 旁（如 `v1.0.1`）；后端可通过 `GET /api/version` 查询。
+- 版本号显示在页面左上角 Logo 旁（如 `v1.0.1`）。
 - 点击顶栏 **「↻」** 按钮**手动**检查 GitHub 最新版本（程序不会自动联网检查）。
+- 程序内置默认仓库 `xiepx0927/Malice-Library`：从压缩包解压运行、没有克隆 git 仓库也能正常检查更新。
 - 每个版本在 GitHub Releases 同时发布两个包：
   - **完整包** `Malice-Library-{版本}.zip` —— 全部源码，适合**中途新用户**从任意版本直接升级
   - **增量包** `Malice-Library-update-{上一版本}-{版本}.zip` —— 仅本次变更文件 + `UPDATE.md` 变更说明，适合老用户一版一步平滑升级（更小、更快）
@@ -79,8 +81,9 @@ Malice-Library/
 ├─ app.py               Flask 后端（API + 爬虫 + 本地压缩包 + 更新检查）
 ├─ build_release.py     发布打包脚本（完整包 + 增量包）
 ├─ templates/index.html 前端界面
-├─ packaging/            Windows 包附加文件（启动.bat / 使用说明.txt / requirements.txt）
-├─ start.sh             Linux 启动脚本
+├─ packaging/           启动.bat / 使用说明.txt / requirements.txt 源文件
+├─ 启动.bat              Windows 一键启动（完整包根目录内置）
+├─ 使用说明.txt          Windows 使用说明
 ├─ archives/            本地图库（自动生成；不入库）
 ├─ cos_cookie.json      站点 cookie（首次图集访问自动生成；不入库）
 └─ .gitignore           排除 archives / cookie / 日志 / 构建产物

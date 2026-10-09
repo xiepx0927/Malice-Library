@@ -267,7 +267,11 @@ def api_version():
 
 
 def _update_repo_url(remote='origin'):
-    """从 git 远程仓库推导 owner/repo，用于查询 GitHub Releases。"""
+    """推导 owner/repo，用于查询 GitHub Releases。
+
+    优先从 git 远程仓库获取；解压包用户没有 git 时回退到内置默认仓库
+    （见 `_UPDATE_REPO`），Windows 用户也能正常检查更新。
+    """
     try:
         r = subprocess.run(['git', 'config', '--get', f'remote.{remote}.url'],
                            capture_output=True, text=True, timeout=5, cwd=BASE_DIR)
@@ -277,6 +281,10 @@ def _update_repo_url(remote='origin'):
     m = re.search(r'(?:github\.com[:/])([^/]+)/([^/.]+)', url)
     if m:
         return {'owner': m.group(1), 'repo': m.group(2)}
+    # 内置默认仓库：发布方维护，作为无 git 环境的兜底。
+    default = tuple(os.environ.get('GITHUB_REPO', 'xiepx0927/Malice-Library').strip('/').split('/', 1))
+    if len(default) == 2 and default[0] and default[1]:
+        return {'owner': default[0], 'repo': default[1]}
     return None
 
 
@@ -305,6 +313,30 @@ def api_update_check():
             headers['Authorization'] = f'token {gh_token}'
         resp = requests.get(url, timeout=10, headers=headers)
         if resp.status_code != 200:
+            # API 被限流 / 不可用时降级：读 releases/latest 重定向拿到最新 tag（无需 API）。
+            try:
+                page = requests.get(
+                    f"https://github.com/{repo['owner']}/{repo['repo']}/releases/latest",
+                    timeout=10, allow_redirects=False,
+                    headers={'User-Agent': APP_NAME})
+                loc = page.headers.get('Location') or ''
+                mtag = re.search(r'/releases/tag/([^/?#]+)', loc)
+                if loc and mtag:
+                    tag = mtag.group(1)
+                    latest_version = tag.lstrip('vV')
+                    cur_key = _semver_key(APP_VERSION)
+                    new_key = _semver_key(tag) or _semver_key(latest_version)
+                    return jsonify({
+                        'supported': True,
+                        'current': APP_VERSION,
+                        'latest': latest_version,
+                        'has_update': bool(cur_key and new_key and new_key > cur_key),
+                        'url': f"https://github.com/{repo['owner']}/{repo['repo']}/releases/tag/{tag}",
+                        'assets': [],
+                        'note': f'GitHub API 暂不可用(HTTP {resp.status_code})，已通过网页方式读取版本',
+                    })
+            except Exception:
+                pass
             return jsonify({'supported': True, 'has_update': False,
                             'message': f'GitHub 查询失败({resp.status_code})，仅显示本地版本',
                             'current': APP_VERSION})

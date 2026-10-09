@@ -23,15 +23,16 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DIST_DIR = os.path.join(BASE_DIR, 'dist')
 
 # 打包进完整包的源码文件（相对仓库根）。
+# Windows 用户解压后根目录即含 启动.bat / 使用说明.txt / requirements.txt，双击即用。
+# 根目录缺失的 启动.bat / 使用说明.txt 会由 packaging/ 下同名文件自动补齐（见 build_full fallback）。
 FULL_ASSETS = [
     'app.py',
     'build_release.py',
     'requirements.txt',
     'README.md',
-    'start.sh',
+    '启动.bat',
+    '使用说明.txt',
     'templates/index.html',
-    'packaging/使用说明.txt',
-    'packaging/启动.bat',
 ]
 # 增量/更新包中额外附带的构建说明文档（不属于"本次变更"但随包说明更新用法）。
 UPDATE_DOCS = ['UPDATE.md', 'README.md']
