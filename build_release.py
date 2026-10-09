@@ -82,10 +82,21 @@ def build_full(to):
     os.makedirs(DIST_DIR, exist_ok=True)
     out = os.path.join(DIST_DIR, f'Malice-Library-{to}.zip')
     files = []
+    seen = set()
     for a in FULL_ASSETS:
+        base_key = a.removesuffix('/')
+        if a in seen:
+            continue
+        seen.add(a)
         p = os.path.join(BASE_DIR, a)
         if os.path.exists(p):
             files.append((a, p))
+            continue
+        # 完整包期望根级 requirements.txt / start.sh 等；
+        # 若根目录缺失但 packaging/ 有同名文件，则从 packaging 补回根级。
+        fallback = os.path.join(BASE_DIR, 'packaging', os.path.basename(a))
+        if os.path.exists(fallback):
+            files.append((os.path.basename(a), fallback))
     with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as zf:
         for a, p in files:
             zf.write(p, a)
