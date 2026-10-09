@@ -298,8 +298,12 @@ def api_update_check():
                         'current': APP_VERSION})
     try:
         url = f"https://api.github.com/repos/{repo['owner']}/{repo['repo']}/releases/latest"
-        resp = requests.get(url, timeout=10, headers={'Accept': 'application/vnd.github+json',
-                                                      'User-Agent': APP_NAME})
+        headers = {'Accept': 'application/vnd.github+json', 'User-Agent': APP_NAME}
+        # 若配置了 GITHUB_TOKEN（环境变量），认证请求限额更高（5000/时），避免公共限流 403。
+        gh_token = os.environ.get('GITHUB_TOKEN', '').strip()
+        if gh_token:
+            headers['Authorization'] = f'token {gh_token}'
+        resp = requests.get(url, timeout=10, headers=headers)
         if resp.status_code != 200:
             return jsonify({'supported': True, 'has_update': False,
                             'message': f'GitHub 查询失败({resp.status_code})，仅显示本地版本',
